@@ -40,8 +40,20 @@ export default {
     };
   },
   methods: {
-    submit() {
+    async submit() {
       console.log("调用登录接口");
+      let res = await this.$http.post("/api/user/login", this.form);
+      console.log(res)
+      if (res.status != 200) {
+        this.$Message.error("登陆失败，网络错误");
+        return
+      }
+      if (res.data.code === 0) {
+        this.$Message.success("登陆成功");
+        this.$router.push("/");
+      } else {
+        this.$Message.error(res.data.message);
+      }
     }
   }
 };
