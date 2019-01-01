@@ -3,11 +3,11 @@
     <Card title="提问">
       <Form label-position="top" :model="form">
         <FormItem prop="title" label="标题">
-          <Input type="text" v-model="form.title" placeholder="请输入标题" />
+          <Input type="text" v-model="form.caption" placeholder="请输入标题" />
         </FormItem>
         <FormItem prop="category" label="类别">
-          <Select v-model="form.category" placeholder="请选择类别" v-for="category in category_list">
-            <Option :value="category.id">{{ category.title }}</Option>
+          <Select v-model="form.category_id" placeholder="请选择类别">
+            <Option  v-for="category of category_list" :value="category.id">{{ category.name }}</Option>
           </Select>
         </FormItem>
         <FormItem prop="content" label="内容">
@@ -25,17 +25,15 @@ export default {
   data() {
     return {
       form: {
-        title: "",
-        category: 1,
+        caption: "",
+        category_id: 1,
         content: "",
-      }
+      },
+      category_list:[]
     };
   },
-  data: {
-    category_list:[
-      {id:1, title:"技术"},
-      {id:2, title:"生活"}
-    ]
+  created() {
+    this.fetchCategoryList()
   },
   methods: {
     async submit() {
@@ -49,8 +47,32 @@ export default {
         this.$Message.success("提问成功");
         this.$router.push("/");
       } else {
-        this.$Message.error(res.data.message);
+        // 这个1008错误码最好是使用常量定义
+         this.$Message.error(res.data.message);
+        if (res.data.code === 1008) {
+            this.$router.push("/login")
+        }
       }
+    },
+    fetchCategoryList() {
+        let vm = this
+        this.$http.get("/api/category/list").then(function(response){
+            console.log(response);
+            if (response.status != 200) {
+                vm.$Message.error("服务繁忙，请稍后重试");
+                return;
+            }
+            if (response.data.code === 0) {
+                console.log(response.data.data);
+                vm.category_list = response.data.data
+            } else {
+                vm.$Message.error(response.data.message);
+            }
+        }, function(response) {
+            vm.$Message.error("服务繁忙，请稍后重试");
+            console.log(response);
+        }
+      )
     }
   }
 };
